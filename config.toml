@@ -1,2 +1,3 @@
-title: Hugo NexT
-theme: hugo-theme-next
+baseURL = "https://celement.github.io/blog/"
+assetDir = "static"  # 确保图片放在static目录
+canonifyURLs = true  # 将相对路径转换为绝对路径
