@@ -8,11 +8,16 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      # 关键修改1：使用递归方式拉取子模块
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: 'recursive'   # 修改为recursive模式
           fetch-depth: 0
+
+      # 新增步骤：显式更新子模块（双重保险）
+      - name: Update submodules
+        run: git submodule update --init --recursive
 
       - name: Setup Hugo Extended
         uses: peaceiris/actions-hugo@v2
@@ -20,23 +25,19 @@ jobs:
           hugo-version: 'latest'
           extended: true
 
-      - name: Build with correct URL handling
+      - name: Build
         run: |
           rm -rf public
-          # 关键修改：指定环境参数并覆盖配置
-          hugo --minify --environment production \
-               --baseURL "https://celement.github.io/blog/" \
-               --config config.toml  # 显式指定配置文件
-          
-          # 验证生成的资源路径
-          grep -r 'https://celement.github.io/blog/' public || echo "路径检查失败！"
-        
+          hugo --minify --baseURL "https://celement.github.io/blog/" --environment production
+          # 验证生成的HTML中是否有shortcode错误
+          if grep -ri 'error' public; then exit 1; fi
+        shell: bash
+
       - name: Validate Build Output
         run: |
           [ -f public/index.html ] || exit 1
           [ -d public/css ] || exit 1
-          # 新增图片路径检查
-          [ -f public/imgs/vendors/github.svg ] && echo "图片存在" || exit 1
+          [ -f public/imgs/vendors/github.svg ] || exit 1
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
