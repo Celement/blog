@@ -1,3 +1,5 @@
 baseURL = "https://celement.github.io/blog/"
 assetDir = "static"  # 确保图片放在static目录
 canonifyURLs = true  # 将相对路径转换为绝对路径
+[params]
+  assetsPrefix = "/blog"  # 强制所有资源添加前缀
