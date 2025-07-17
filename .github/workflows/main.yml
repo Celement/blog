@@ -20,24 +20,31 @@ jobs:
           hugo-version: 'latest'
           extended: true
 
-      - name: Build
+      - name: Build with correct URL handling
         run: |
           rm -rf public
-          hugo --minify --baseURL "https://celement.github.io/blog/"
+          # 关键修改：指定环境参数并覆盖配置
+          hugo --minify --environment production \
+               --baseURL "https://celement.github.io/blog/" \
+               --config config.toml  # 显式指定配置文件
+          
+          # 验证生成的资源路径
+          grep -r 'https://celement.github.io/blog/' public || echo "路径检查失败！"
         
       - name: Validate Build Output
         run: |
           [ -f public/index.html ] || exit 1
           [ -d public/css ] || exit 1
+          # 新增图片路径检查
+          [ -f public/imgs/vendors/github.svg ] && echo "图片存在" || exit 1
 
-      # 修复后的部署配置
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           external_repository: Celement/blog
           personal_token: ${{ secrets.ACTION_ACCESS_TOKEN }}
           publish_dir: ./public
-          publish_branch: gh-pages   # 注意分支名是 gh-pages，不是 main
+          publish_branch: gh-pages
           force_orphan: true
           user_name: 'github-actions[bot]'
           user_email: 'github-actions@github.com'
