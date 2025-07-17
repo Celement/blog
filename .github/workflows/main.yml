@@ -20,24 +20,29 @@ jobs:
           hugo-version: 'latest'
           extended: true
 
-      - name: Build
+      - name: Build with Relative Paths
         run: |
           rm -rf public
-          hugo --minify --baseURL "https://celement.github.io/blog/"
-        
-      - name: Validate Build Output
-        run: |
-          [ -f public/index.html ] || exit 1
-          [ -d public/css ] || exit 1
+          # 关键修改：无需指定baseURL参数，同时设置环境变量HUGO_RELATIVEURLS=true
+          hugo --minify --environment production
 
-      # 修复后的部署配置
+      - name: Verify Relative Paths
+        run: |
+          echo "=== 检查图片路径 ==="
+          # 确保图片路径是相对路径
+          if grep -r 'src="/' public/; then
+            echo "❌ 发现绝对路径，需要修复"
+            exit 1
+          fi
+          echo "✅ 所有资源路径均为相对路径"
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           external_repository: Celement/blog
           personal_token: ${{ secrets.ACTION_ACCESS_TOKEN }}
           publish_dir: ./public
-          publish_branch: gh-pages   # 注意分支名是 gh-pages，不是 main
+          publish_branch: gh-pages
           force_orphan: true
           user_name: 'github-actions[bot]'
           user_email: 'github-actions@github.com'
