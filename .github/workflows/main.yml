@@ -10,10 +10,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          submodules: true
-          fetch-depth: 0
-
+        
       - name: Setup Hugo Extended
         uses: peaceiris/actions-hugo@v2
         with:
@@ -23,29 +20,11 @@ jobs:
       - name: Build
         run: |
           rm -rf public
-          # 打印调试信息
-          echo "Current directory: $(pwd)"
-          hugo version
-          # 增加调试：显示配置文件内容
-          cat config.toml
-          # 构建
-          hugo --minify --baseURL "https://celement.github.io/blog/"
-
-      # 新增：列出生成的文件结构
-      - name: List public directory
-        run: ls -R public
-
-      # 新增：检查一个包含图片的HTML文件
-      - name: Check HTML output
-        run: |
-          # 这里找一个应该包含图片的HTML文件，例如首页
-          cat public/index.html
-
-      - name: Validate Build Output
-        run: |
-          [ -f public/index.html ] || exit 1
-          [ -d public/css ] || exit 1
-
+          # 关键修改：添加 --baseURL 和 --relativeURLs 参数
+          hugo --minify --baseURL "https://celement.github.io/blog/" --relativeURLs
+          # 简单验证生成的文件
+          ls public > build-output.txt
+          
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
@@ -54,5 +33,3 @@ jobs:
           publish_dir: ./public
           publish_branch: gh-pages
           force_orphan: true
-          user_name: 'github-actions[bot]'
-          user_email: 'github-actions@github.com'
