@@ -1,0 +1,42 @@
+name: Deploy Hugo Site
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Setup Hugo Extended
+        uses: peaceiris/actions-hugo@v2
+        with:
+          hugo-version: 'latest'
+          extended: true
+
+      - name: Build
+        run: |
+          rm -rf public
+          hugo --minify --baseURL "https://celement.github.io/blog/"
+        
+      - name: Validate Build Output
+        run: |
+          [ -f public/index.html ] || exit 1
+          [ -d public/css ] || exit 1
+
+      # 修复后的部署配置
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          deploy_key: ${{ secrets.ACTION_ACCESS_TOKEN }}
+          external_repository: Celement/java_blog
+          publish_dir: ./public
+          publish_branch: gh-pages
+          keep_files: false
+          force_orphan: true
